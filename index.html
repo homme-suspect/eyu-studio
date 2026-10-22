@@ -19,13 +19,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Fraunces:opsz,wght@9..144,600&family=Anton&family=Inter:wght@400;500;600;700&display=swap"
     />
     <link rel="stylesheet" href="style.css" />
     <script>document.documentElement.classList.add("js");</script>
   </head>
   <body>
     <div class="glow" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"></div>
+    <div class="cursor" aria-hidden="true"></div>
 
     <header class="nav">
       <a href="#top" class="brand" aria-label="Eyu Studio, accueil">
@@ -35,6 +37,7 @@
       <nav class="nav-links" aria-label="Navigation principale">
         <a href="#offres">Offres</a>
         <a href="#realisations">Réalisations</a>
+        <a href="#demo">Démo live</a>
         <a href="#estimation">Estimation</a>
         <a href="#faq">FAQ</a>
       </nav>
@@ -65,38 +68,8 @@
         </div>
 
         <div class="hero-visual" aria-hidden="true">
-          <div class="win win-back" data-depth="12">
-            <div class="win-bar"><i></i><i></i><i></i></div>
-            <div class="win-body">
-              <div class="sk sk-title"></div>
-              <div class="sk-row"><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div></div>
-              <div class="sk sk-line"></div>
-              <div class="sk sk-line short"></div>
-            </div>
-          </div>
-          <div class="win win-front" data-depth="26">
-            <div class="win-bar"><i></i><i></i><i></i><span>votre-site.fr</span></div>
-            <div class="win-body hero-site">
-              <div class="hs-nav"><b></b><span></span><span></span><span></span></div>
-              <div class="hs-title">Votre activité,<br /><span class="grad">enfin en ligne.</span></div>
-              <div class="hs-btns"><span class="hs-btn"></span><span class="hs-btn ghost"></span></div>
-              <div class="hs-chart">
-                <span style="--h: 38%"></span><span style="--h: 52%"></span><span style="--h: 45%"></span>
-                <span style="--h: 68%"></span><span style="--h: 61%"></span><span style="--h: 84%"></span><span style="--h: 96%"></span>
-              </div>
-            </div>
-          </div>
-          <div class="phone" data-depth="40">
-            <div class="phone-notch"></div>
-            <div class="phone-body">
-              <div class="ph-head">Réservation</div>
-              <div class="ph-days"><span>L</span><span>M</span><span class="on">M</span><span>J</span><span>V</span></div>
-              <div class="ph-slot">09:30</div>
-              <div class="ph-slot on">11:00</div>
-              <div class="ph-slot">14:30</div>
-              <div class="ph-ok">Confirmé ✓</div>
-            </div>
-          </div>
+          <canvas id="particles"></canvas>
+          <p class="hero-hint">Bougez la souris · cliquez</p>
         </div>
       </section>
 
@@ -260,6 +233,118 @@
         </div>
       </section>
 
+      <!-- Démo live -->
+      <section id="demo" class="section">
+        <div class="section-head">
+          <p class="kicker reveal">Démo live</p>
+          <h2 class="reveal">Construisez un site, <span class="muted">en direct.</span></h2>
+          <p class="section-sub reveal">Choisissez un métier, une couleur, un style : l'aperçu se met à jour instantanément. Les entreprises de cette démo sont fictives.</p>
+        </div>
+
+        <div class="builder reveal" id="builder">
+          <form class="b-controls" id="builderForm" onsubmit="return false">
+            <fieldset>
+              <legend>Métier</legend>
+              <div class="pills">
+                <label><input type="radio" name="metier" value="pizzeria" checked /><span>Pizzeria</span></label>
+                <label><input type="radio" name="metier" value="coiffure" /><span>Coiffure</span></label>
+                <label><input type="radio" name="metier" value="plombier" /><span>Plombier</span></label>
+                <label><input type="radio" name="metier" value="photo" /><span>Photographe</span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Couleur</legend>
+              <div class="swatches">
+                <label style="--c: #c6ff4a"><input type="radio" name="couleur" value="#c6ff4a" aria-label="Citron" /><span></span></label>
+                <label style="--c: #ff8a3d"><input type="radio" name="couleur" value="#ff8a3d" checked aria-label="Orange" /><span></span></label>
+                <label style="--c: #ff6fae"><input type="radio" name="couleur" value="#ff6fae" aria-label="Rose" /><span></span></label>
+                <label style="--c: #8b7bff"><input type="radio" name="couleur" value="#8b7bff" aria-label="Violet" /><span></span></label>
+                <label style="--c: #36d6ff"><input type="radio" name="couleur" value="#36d6ff" aria-label="Cyan" /><span></span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Style</legend>
+              <div class="pills">
+                <label><input type="radio" name="look" value="moderne" checked /><span>Moderne</span></label>
+                <label><input type="radio" name="look" value="elegant" /><span class="f-serif">Élégant</span></label>
+                <label><input type="radio" name="look" value="audacieux" /><span class="f-bold">AUDACIEUX</span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Thème</legend>
+              <div class="pills">
+                <label><input type="radio" name="theme" value="sombre" checked /><span>Sombre</span></label>
+                <label><input type="radio" name="theme" value="clair" /><span>Clair</span></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Blocs</legend>
+              <div class="pills">
+                <label><input type="checkbox" name="bloc" value="resa" checked /><span>Réservation</span></label>
+                <label><input type="checkbox" name="bloc" value="avis" checked /><span>Avis</span></label>
+                <label><input type="checkbox" name="bloc" value="galerie" /><span>Galerie</span></label>
+              </div>
+            </fieldset>
+            <pre class="b-code" aria-label="Configuration générée"><code id="builderCode"></code></pre>
+          </form>
+
+          <div class="b-preview">
+            <div class="browser">
+              <div class="win-bar"><i></i><i></i><i></i><span id="miniUrl">bella-pizza.fr</span></div>
+              <div class="mini" id="mini"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Avant / après -->
+      <section class="section">
+        <div class="section-head">
+          <p class="kicker reveal">Avant / après</p>
+          <h2 class="reveal">Glissez pour voir <span class="muted">la différence.</span></h2>
+        </div>
+
+        <div class="ba reveal" id="ba" style="--pos: 50%">
+          <div class="ba-old" aria-hidden="true">
+            <div class="old-marquee"><span>*** Bienvenue sur le site officiel de DURAND PLOMBERIE !!! ***</span></div>
+            <h3>DURAND PLOMBERIE</h3>
+            <p class="old-sub">Plomberie - Chauffage - Sanitaire - Depuis 1998</p>
+            <table>
+              <tr><td><u>Accueil</u></td><td><u>Nos services</u></td><td><u>Contact</u></td><td><u>Livre d'or</u></td></tr>
+            </table>
+            <div class="old-body">
+              <div class="old-img">[ image ]</div>
+              <p>Bonjour et bienvenue ! Nous sommes une entreprise de plomberie. Pour tout renseignement merci de nous contacter par téléphone aux heures de bureau ou par fax.</p>
+            </div>
+            <p class="old-construct">⚠ Site en construction ⚠</p>
+            <p class="old-count">Vous êtes le <b>004812</b><sup>e</sup> visiteur · Meilleure résolution 800x600</p>
+          </div>
+
+          <div class="ba-new" aria-hidden="true">
+            <div class="nw-nav"><b><i></i>Durand Plomberie</b><span>Services</span><span>Avis</span><em>Devis gratuit</em></div>
+            <div class="nw-hero">
+              <div>
+                <p class="nw-k">Plombier chauffagiste</p>
+                <h3>Une fuite ?<br /><span>On arrive vite.</span></h3>
+                <p class="nw-p">Dépannage 7j/7, devis gratuit en ligne, intervention en moins de 2 h.</p>
+                <div class="nw-btns"><em>Appeler maintenant</em><i>Demander un devis</i></div>
+              </div>
+              <div class="nw-card">
+                <p>Note des clients</p>
+                <strong>4,9 <span>★★★★★</span></strong>
+                <small>Exemple fictif</small>
+              </div>
+            </div>
+            <div class="nw-row"><div><b>2 h</b>délai moyen</div><div><b>7j/7</b>dépannage</div><div><b>0 €</b>déplacement</div></div>
+          </div>
+
+          <div class="ba-handle" aria-hidden="true"><span>‹ ›</span></div>
+          <input class="ba-range" type="range" min="0" max="100" value="50" aria-label="Comparer avant et après" />
+          <span class="ba-tag ba-tag-old">Avant</span>
+          <span class="ba-tag ba-tag-new">Après</span>
+        </div>
+      </section>
+
       <!-- Estimation -->
       <section id="estimation" class="section">
         <div class="section-head">
@@ -338,6 +423,13 @@
             <div class="reveal"><strong>0 €</strong><span>d'hébergement pour un site vitrine</span></div>
             <div class="reveal"><strong>Sur mesure</strong><span>pas de modèle tout fait</span></div>
           </div>
+        </div>
+        <div class="gauges reveal">
+          <div class="gauge" data-score="100"><svg viewBox="0 0 120 120"><circle r="52" cx="60" cy="60" /><circle class="g-val" r="52" cx="60" cy="60" /></svg><b>0</b><span>Performance</span></div>
+          <div class="gauge" data-score="100"><svg viewBox="0 0 120 120"><circle r="52" cx="60" cy="60" /><circle class="g-val" r="52" cx="60" cy="60" /></svg><b>0</b><span>Accessibilité</span></div>
+          <div class="gauge" data-score="100"><svg viewBox="0 0 120 120"><circle r="52" cx="60" cy="60" /><circle class="g-val" r="52" cx="60" cy="60" /></svg><b>0</b><span>Bonnes pratiques</span></div>
+          <div class="gauge" data-score="100"><svg viewBox="0 0 120 120"><circle r="52" cx="60" cy="60" /><circle class="g-val" r="52" cx="60" cy="60" /></svg><b>0</b><span>Référencement</span></div>
+          <p class="gauges-note">Les scores Google Lighthouse que je vise à chaque livraison.</p>
         </div>
       </section>
 
