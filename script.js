@@ -31,23 +31,6 @@ $("#year").textContent = new Date().getFullYear();
 const nav = $(".nav");
 addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 10), { passive: true });
 
-// Apparitions en cascade
-const io = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      e.target.classList.add("in");
-      io.unobserve(e.target);
-    }
-  },
-  { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
-);
-$$(".reveal").forEach((el) => {
-  const siblings = $$(":scope > .reveal", el.parentElement);
-  el.style.setProperty("--d", `${Math.min(siblings.indexOf(el), 5) * 0.08}s`);
-  io.observe(el);
-});
-
 // Halo et fenêtres qui suivent la souris
 if (!reduced && matchMedia("(pointer: fine)").matches) {
   const glow = $(".glow");
@@ -65,22 +48,6 @@ if (!reduced && matchMedia("(pointer: fine)").matches) {
     }
   });
 }
-
-// Compteur
-const counter = $("[data-count]");
-new IntersectionObserver(([e], obs) => {
-  if (!e.isIntersecting) return;
-  obs.disconnect();
-  const target = +counter.dataset.count;
-  if (reduced) return (counter.textContent = target);
-  const t0 = performance.now();
-  const tick = (t) => {
-    const p = Math.min((t - t0) / 1400, 1);
-    counter.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
-    if (p < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}).observe(counter);
 
 // Estimation
 const form = $("#estimator");
@@ -172,12 +139,6 @@ legal.addEventListener("click", (e) => e.target === legal && legal.close());
 // ---------- Effets avancés ----------
 
 const finePointer = matchMedia("(pointer: fine)").matches;
-const onScreen = (el, cb, threshold = 0.3) =>
-  new IntersectionObserver(([e], obs) => {
-    if (!e.isIntersecting) return;
-    obs.disconnect();
-    cb();
-  }, { threshold }).observe(el);
 
 // Particules de l'accueil : elles forment des mots et fuient la souris
 (() => {
@@ -447,61 +408,6 @@ const onScreen = (el, cb, threshold = 0.3) =>
   render();
 })();
 
-// Avant / après
-(() => {
-  const ba = $("#ba");
-  const range = $(".ba-range", ba);
-  const set = (v) => ba.style.setProperty("--pos", `${v}%`);
-  range.addEventListener("input", () => set(range.value));
-  if (reduced) return;
-  onScreen(ba, () => {
-    const t0 = performance.now();
-    const anim = (t) => {
-      const p = Math.min((t - t0) / 1800, 1);
-      const v = 50 + Math.sin(p * Math.PI * 2) * 22 * (1 - p);
-      set(v);
-      range.value = v;
-      if (p < 1) requestAnimationFrame(anim);
-    };
-    requestAnimationFrame(anim);
-  }, 0.5);
-})();
-
-// Jauges de performance
-$$(".gauge").forEach((g) => {
-  const ring = $(".g-val", g);
-  const num = $("b", g);
-  const score = +g.dataset.score;
-  onScreen(g, () => {
-    ring.style.transition = reduced ? "none" : "stroke-dashoffset 1.8s cubic-bezier(0.2, 0.7, 0.1, 1)";
-    ring.style.strokeDashoffset = 326.7 * (1 - score / 100);
-    if (reduced) return (num.textContent = score);
-    const t0 = performance.now();
-    const tick = (t) => {
-      const p = Math.min((t - t0) / 1800, 1);
-      num.textContent = Math.round(score * (1 - Math.pow(1 - p, 3)));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
-});
-
-// Titres de section qui se décodent
-const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/#*";
-$$(".kicker").forEach((el) => {
-  if (reduced) return;
-  const final = el.textContent;
-  onScreen(el, () => {
-    let frame = 0;
-    const tick = () => {
-      el.textContent = [...final].map((ch, i) => (ch === " " || frame > i * 2 + 4 ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0])).join("");
-      if (++frame <= final.length * 2 + 4) requestAnimationFrame(tick);
-      else el.textContent = final;
-    };
-    tick();
-  }, 0.8);
-});
-
 // Barre de progression
 const bar = $(".progress");
 addEventListener("scroll", () => {
@@ -511,7 +417,7 @@ addEventListener("scroll", () => {
 
 // Effets à la souris : lumière sur les cartes, boutons aimantés, curseur
 if (finePointer && !reduced) {
-  $$(".offer, .steps li, .why-grid > div, .gauge, .work, .faq details").forEach((el) => {
+  $$(".offer, .p-browser, .why-grid > div, .gauge, .work, .faq details").forEach((el) => {
     el.classList.add("spot");
     el.addEventListener("pointermove", (e) => {
       const r = el.getBoundingClientRect();
@@ -547,3 +453,245 @@ if (finePointer && !reduced) {
   };
   loop();
 }
+
+// Avant / après : glisser à la main
+const ba = $("#ba");
+const baRange = $(".ba-range", ba);
+const setBa = (v) => ba.style.setProperty("--pos", `${v}%`);
+let baTouched = false;
+baRange.addEventListener("input", () => {
+  baTouched = true;
+  setBa(baRange.value);
+});
+
+// Jauges et compteur : valeur finale par défaut (sans animation)
+const setGauge = (g, v) => {
+  $(".g-val", g).style.strokeDashoffset = 326.7 * (1 - v / 100);
+  $("b", g).textContent = Math.round(v);
+};
+$$(".gauge").forEach((g) => setGauge(g, +g.dataset.score));
+$$("[data-count]").forEach((c) => (c.textContent = c.dataset.count));
+
+// ---------- Motion design : tout est lié au défilement, dans les deux sens ----------
+(() => {
+  if (reduced || !window.gsap || !window.ScrollTrigger || !window.Lenis) return;
+  gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
+  document.documentElement.classList.add("motion");
+
+  // Défilement fluide
+  const lenis = new Lenis({ lerp: 0.09 });
+  lenis.on("scroll", ScrollTrigger.update);
+  gsap.ticker.add((t) => lenis.raf(t * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  $$('a[href^="#"]').forEach((a) =>
+    a.addEventListener("click", (e) => {
+      const id = a.getAttribute("href");
+      const target = id === "#top" ? 0 : $(id);
+      if (target === null) return;
+      e.preventDefault();
+      lenis.scrollTo(target, { offset: id === "#top" ? 0 : -60, duration: 1.4 });
+    })
+  );
+  $("#legal").addEventListener("close", () => lenis.start());
+  $("#openLegal").addEventListener("click", () => lenis.stop());
+
+  // Découpe un titre en mots, sans casser les dégradés ni les <br>
+  const split = (el) => {
+    for (const n of [...el.childNodes]) {
+      if (n.nodeType === 3) {
+        const frag = document.createDocumentFragment();
+        for (const part of n.textContent.split(/(\s+)/)) {
+          if (!part) continue;
+          if (/^\s+$/.test(part)) { frag.append(" "); continue; }
+          const w = document.createElement("span");
+          const i = document.createElement("span");
+          w.className = "w";
+          i.className = "wi";
+          i.textContent = part;
+          w.append(i);
+          frag.append(w);
+        }
+        n.replaceWith(frag);
+      } else if (n.nodeType === 1 && n.tagName !== "BR") {
+        if (n.classList.contains("grad")) n.classList.add("is-split");
+        split(n);
+      }
+    }
+    return $$(".wi", el);
+  };
+
+  // Brouillage des petits titres, rejoué à chaque passage
+  const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/#*";
+  const scramble = (el) => {
+    const final = el.dataset.text || (el.dataset.text = el.textContent);
+    let frame = 0;
+    const tick = () => {
+      el.textContent = [...final].map((ch, i) => (ch === " " || frame > i * 2 + 4 ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0])).join("");
+      if (++frame <= final.length * 2 + 4) requestAnimationFrame(tick);
+      else el.textContent = final;
+    };
+    tick();
+  };
+  $$(".kicker").forEach((el) =>
+    ScrollTrigger.create({ trigger: el, start: "top 90%", onEnter: () => scramble(el), onEnterBack: () => scramble(el) })
+  );
+
+  // Barre de navigation : se cache en descendant, revient en remontant
+  let navHidden = false;
+  ScrollTrigger.create({
+    start: 0,
+    end: "max",
+    onUpdate: (s) => {
+      const hide = s.direction === 1 && s.scroll() > 500;
+      if (hide === navHidden) return;
+      navHidden = hide;
+      gsap.to(".nav", { yPercent: hide ? -110 : 0, duration: 0.45, ease: "power3.out", overwrite: true });
+    },
+  });
+
+  // Accueil : entrée, puis sortie au défilement
+  const heroWords = split($(".hero h1"));
+  gsap.timeline({ defaults: { ease: "expo.out", duration: 1.3 } })
+    .from(".nav", { yPercent: -110, duration: 1 }, 0)
+    .from(heroWords, { yPercent: 115, rotate: 5, stagger: 0.07 }, 0.1)
+    .from(".hero .eyebrow", { y: 20, opacity: 0, duration: 0.9 }, 0.15)
+    .from(".hero .lead, .hero-cta, .hero-facts", { y: 34, opacity: 0, stagger: 0.1 }, 0.5)
+    .from("#particles", { opacity: 0, scale: 0.85, duration: 1.8 }, 0.2);
+
+  gsap.timeline({ scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } })
+    .to(".hero-text", { yPercent: -30, opacity: 0, ease: "none" }, 0)
+    .to(".hero-visual", { yPercent: 25, scale: 1.2, opacity: 0, ease: "none" }, 0);
+
+  // Bandeau : vitesse et sens qui suivent le défilement
+  const track = $(".marquee-track");
+  const setX = gsap.quickSetter(track, "x", "px");
+  const setSkew = gsap.quickSetter(track, "skewX", "deg");
+  let mx = 0, dir = 1;
+  gsap.ticker.add(() => {
+    const v = lenis.velocity || 0;
+    if (lenis.direction) dir = lenis.direction;
+    mx -= (0.7 + Math.min(Math.abs(v) * 0.35, 18)) * dir;
+    const half = track.scrollWidth / 2;
+    if (mx <= -half) mx += half;
+    if (mx > 0) mx -= half;
+    setX(mx);
+    setSkew(gsap.utils.clamp(-10, 10, -v * 0.35));
+  });
+
+  // Gros titres : les mots montent un par un
+  $$(".section h2, .process h2").forEach((h) => {
+    gsap.from(split(h), {
+      yPercent: 115,
+      rotate: 4,
+      stagger: 0.05,
+      duration: 1.1,
+      ease: "expo.out",
+      scrollTrigger: { trigger: h, start: "top 88%", toggleActions: "play none none reverse" },
+    });
+  });
+
+  // Apparitions génériques, réversibles
+  const special = ".hero *, h2, .offer, .work, .contact, .gauges, .builder";
+  const items = $$(".reveal").filter((el) => !el.matches(special));
+  gsap.set(items, { opacity: 0, y: 50 });
+  ScrollTrigger.batch(items, {
+    start: "top 92%",
+    onEnter: (b) => gsap.to(b, { opacity: 1, y: 0, stagger: 0.08, duration: 0.9, ease: "power3.out", overwrite: true }),
+    onLeaveBack: (b) => gsap.to(b, { opacity: 0, y: 50, stagger: 0.04, duration: 0.5, ease: "power2.in", overwrite: true }),
+  });
+
+  const mm = gsap.matchMedia();
+
+  // Offres : les cartes arrivent en éventail
+  mm.add("(min-width: 681px)", () => {
+    gsap.fromTo(".offer",
+      { y: 180, rotate: (i) => [-8, 0, 8][i % 3], opacity: 0 },
+      { y: 0, rotate: 0, opacity: 1, ease: "power2.out", stagger: 0.1, scrollTrigger: { trigger: ".offers", start: "top 95%", end: "top 40%", scrub: 1 } });
+  });
+  mm.add("(max-width: 680px)", () => {
+    $$(".offer").forEach((o) =>
+      gsap.fromTo(o, { y: 90, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, ease: "power2.out", scrollTrigger: { trigger: o, start: "top 100%", end: "top 65%", scrub: 1 } })
+    );
+  });
+
+  // Réalisations : zoom à l'entrée et parallaxe des visuels
+  $$(".work").forEach((w) => {
+    gsap.fromTo(w, { y: 120, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, ease: "power2.out", scrollTrigger: { trigger: w, start: "top 100%", end: "top 55%", scrub: 1 } });
+    gsap.fromTo($(".work-visual > *", w), { yPercent: 7 }, { yPercent: -7, ease: "none", scrollTrigger: { trigger: w, start: "top bottom", end: "bottom top", scrub: true } });
+  });
+
+  // Démo live : l'aperçu se redresse
+  gsap.fromTo("#builder", { opacity: 0, y: 80 }, { opacity: 1, y: 0, ease: "power2.out", scrollTrigger: { trigger: "#builder", start: "top 100%", end: "top 60%", scrub: 1 } });
+  gsap.fromTo(".b-preview", { rotateX: 22, transformPerspective: 1400, transformOrigin: "50% 0%" }, { rotateX: 0, ease: "power2.out", scrollTrigger: { trigger: "#builder", start: "top 95%", end: "top 30%", scrub: 1 } });
+
+  // Avant / après : le défilement fait glisser la barre (tant qu'on ne l'a pas touchée)
+  ScrollTrigger.create({
+    trigger: ba,
+    start: "top 85%",
+    end: "bottom 30%",
+    scrub: true,
+    onUpdate: (s) => {
+      if (baTouched) return;
+      const v = 94 - s.progress * 88;
+      setBa(v);
+      baRange.value = v;
+    },
+  });
+
+  // Méthode : section épinglée, le site se construit étape par étape
+  const steps = $$(".p-steps li");
+  let current = 0;
+  const p = gsap.timeline({
+    defaults: { ease: "power2.out" },
+    scrollTrigger: {
+      trigger: ".process",
+      start: "top top",
+      end: () => `+=${innerHeight * 3.2}`,
+      pin: true,
+      scrub: 1,
+      anticipatePin: 1,
+    },
+    onUpdate() {
+      gsap.set(".p-bar i", { scaleX: this.progress() });
+      const i = Math.min(3, Math.floor(this.time()));
+      if (i === current) return;
+      current = i;
+      steps.forEach((li, k) => li.classList.toggle("active", k === i));
+    },
+  });
+  p.fromTo(".p-browser", { y: 60, rotate: -2 }, { y: 0, rotate: 0, duration: 0.4 }, 0)
+    .fromTo(".bubble", { y: 30, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, stagger: 0.18, duration: 0.25 }, 0.05)
+    .fromTo(".p-chat", { yPercent: 0, opacity: 1 }, { yPercent: -25, opacity: 0, duration: 0.3, ease: "power2.in" }, 1)
+    .fromTo(".p-wire > *", { y: 40, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 0.3 }, 1.15)
+    .fromTo(".wf-cards span", { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, stagger: 0.07, duration: 0.25 }, 1.45)
+    .fromTo(".p-site", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power3.inOut" }, 2.05)
+    .fromTo(".ps-hero h4, .ps-btn, .ps-cards div", { y: 30, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.06, duration: 0.3 }, 2.3)
+    .fromTo(".ps-art", { rotate: -14, scale: 0.6 }, { rotate: 0, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 2.3)
+    .fromTo(".p-browser", { scale: 1 }, { scale: 0.96, duration: 0.3, immediateRender: false }, 3)
+    .fromTo(".g-result", { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "back.out(1.4)" }, 3.1)
+    .fromTo(".live-badge", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(2.2)" }, 3.3)
+    .fromTo(".notif", { x: 70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3 }, 3.5)
+    .to({}, { duration: 0.2 }, 3.8);
+
+  // Pourquoi : compteur et jauges suivent le défilement
+  $$("[data-count]").forEach((c) => {
+    const o = { v: 0 };
+    gsap.to(o, { v: +c.dataset.count, ease: "none", onUpdate: () => (c.textContent = Math.round(o.v)), scrollTrigger: { trigger: c, start: "top 95%", end: "top 60%", scrub: 1 } });
+  });
+  gsap.fromTo(".gauges", { opacity: 0, y: 60 }, { opacity: 1, y: 0, scrollTrigger: { trigger: ".gauges", start: "top 100%", end: "top 70%", scrub: 1 } });
+  $$(".gauge").forEach((g) => {
+    const o = { v: 0 };
+    setGauge(g, 0);
+    gsap.to(o, { v: +g.dataset.score, ease: "power1.out", onUpdate: () => setGauge(g, o.v), scrollTrigger: { trigger: g, start: "top 95%", end: "top 50%", scrub: 1 } });
+  });
+
+  // Contact : le bloc s'ouvre
+  gsap.fromTo(".contact", { scale: 0.86, borderRadius: 90, opacity: 0.3 }, { scale: 1, borderRadius: 30, opacity: 1, ease: "power2.out", scrollTrigger: { trigger: ".contact", start: "top 100%", end: "top 35%", scrub: 1 } });
+
+  // Grand logo du bas
+  gsap.from(".footer-big span", { yPercent: 100, stagger: 0.08, ease: "power2.out", scrollTrigger: { trigger: ".footer-big", start: "top 100%", end: "bottom 95%", scrub: 1 } });
+
+  document.fonts.ready.then(() => ScrollTrigger.refresh());
+})();

@@ -393,17 +393,64 @@
       </section>
 
       <!-- Méthode -->
-      <section class="section">
-        <div class="section-head">
-          <p class="kicker reveal">Méthode</p>
-          <h2 class="reveal">Simple, <span class="muted">du début à la fin.</span></h2>
+      <section class="process" id="methode">
+        <div class="process-pin">
+          <div class="process-left">
+            <p class="kicker">Méthode</p>
+            <h2 class="split">Votre site, <span class="muted">étape par étape.</span></h2>
+            <ol class="p-steps">
+              <li class="active"><span>01</span><div><h3>On discute</h3><p>Un appel de quinze minutes pour comprendre votre activité, vos clients et votre budget.</p></div></li>
+              <li><span>02</span><div><h3>Maquette</h3><p>Vous voyez la structure de votre site avant qu'il soit construit. On ajuste ensemble.</p></div></li>
+              <li><span>03</span><div><h3>Création</h3><p>Les couleurs, les textes, les photos : le site prend vie, vous validez chaque étape.</p></div></li>
+              <li><span>04</span><div><h3>En ligne</h3><p>Mise en ligne, fiche Google, explications. Je reste joignable après la livraison.</p></div></li>
+            </ol>
+            <div class="p-bar"><i></i></div>
+          </div>
+
+          <div class="process-right" aria-hidden="true">
+            <div class="browser p-browser">
+              <div class="win-bar"><i></i><i></i><i></i><span class="p-url">fleurs-de-saison.fr</span></div>
+              <div class="p-stage">
+                <div class="p-layer p-chat">
+                  <p class="bubble them">Bonjour ! Je suis fleuriste et je voudrais un site.</p>
+                  <p class="bubble me">Avec plaisir. Que doivent pouvoir faire vos clients ?</p>
+                  <p class="bubble them">Voir mes bouquets et commander pour la Saint-Valentin.</p>
+                  <p class="bubble me">Parfait, je vous prépare une maquette.</p>
+                </div>
+
+                <div class="p-layer p-wire">
+                  <div class="wf-nav"><b></b><i></i><i></i><i></i></div>
+                  <div class="wf-hero"><div><b></b><b class="s"></b><i></i></div><span></span></div>
+                  <div class="wf-cards"><span></span><span></span><span></span></div>
+                </div>
+
+                <div class="p-layer p-site">
+                  <div class="ps-nav"><b><i></i>Fleurs de Saison</b><span>Bouquets</span><span>Commander</span></div>
+                  <div class="ps-hero">
+                    <div>
+                      <p class="ps-k">Fleuriste artisan</p>
+                      <h4>Des fleurs fraîches,<br /><em>livrées chez vous.</em></h4>
+                      <span class="ps-btn">Commander un bouquet</span>
+                    </div>
+                    <div class="ps-art"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><circle cx="8" cy="10" r="3"/><circle cx="16" cy="10" r="3"/><circle cx="10" cy="5.5" r="3"/><circle cx="14" cy="5.5" r="3"/><path d="M12 11v11M12 17c-2-2-5-2-6-1M12 15c2-2 5-2 6-1"/></svg></div>
+                  </div>
+                  <div class="ps-cards"><div><small>Bouquet rond</small><b>35 €</b></div><div><small>Roses rouges</small><b>49 €</b></div><div><small>Composition</small><b>59 €</b></div></div>
+                </div>
+
+                <div class="p-layer p-live">
+                  <div class="g-result">
+                    <p class="g-url">fleurs-de-saison.fr</p>
+                    <p class="g-title">Fleurs de Saison · Fleuriste artisan</p>
+                    <p class="g-desc">Bouquets frais livrés chez vous. Commandez en ligne en 2 minutes.</p>
+                  </div>
+                  <div class="live-badge"><i></i>En ligne</div>
+                  <div class="notif"><b>Nouvelle commande</b><span>Roses rouges · 49 €</span></div>
+                </div>
+              </div>
+            </div>
+            <p class="p-note">Exemple fictif</p>
+          </div>
         </div>
-        <ol class="steps">
-          <li class="reveal"><span>01</span><h3>On discute</h3><p>Un appel de quinze minutes pour comprendre votre activité, vos clients et votre budget.</p></li>
-          <li class="reveal"><span>02</span><h3>Maquette</h3><p>Vous voyez votre site avant qu'il soit construit. On ajuste jusqu'à ce qu'il vous plaise.</p></li>
-          <li class="reveal"><span>03</span><h3>Création</h3><p>Je construis le site, vous suivez l'avancement et validez chaque étape.</p></li>
-          <li class="reveal"><span>04</span><h3>En ligne</h3><p>Mise en ligne, fiche Google, explications. Je reste joignable après la livraison.</p></li>
-        </ol>
       </section>
 
       <!-- Pourquoi -->
@@ -487,6 +534,7 @@
       </section>
     </main>
 
+    <div class="footer-big" aria-hidden="true"><span>e</span><span>y</span><span>u</span><span class="fb-s">studio</span></div>
     <footer class="footer">
       <a href="#top" class="brand"><span class="brand-mark" aria-hidden="true">e</span><span>eyu<em>studio</em></span></a>
       <p>Création de sites internet et d'applis sur mesure.</p>
@@ -503,6 +551,9 @@
       <form method="dialog"><button class="btn btn-small">Fermer</button></form>
     </dialog>
 
+    <script src="vendor/gsap.min.js"></script>
+    <script src="vendor/ScrollTrigger.min.js"></script>
+    <script src="vendor/lenis.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
