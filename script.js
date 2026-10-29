@@ -31,24 +31,6 @@ $("#year").textContent = new Date().getFullYear();
 const nav = $(".nav");
 addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 10), { passive: true });
 
-// Halo et fenêtres qui suivent la souris
-if (!reduced && matchMedia("(pointer: fine)").matches) {
-  const glow = $(".glow");
-  const layers = $$("[data-depth]");
-  const hero = $(".hero");
-  addEventListener("pointermove", (e) => {
-    glow.style.setProperty("--mx", `${e.clientX}px`);
-    glow.style.setProperty("--my", `${e.clientY}px`);
-    if (scrollY > hero.offsetHeight) return;
-    const x = e.clientX / innerWidth - 0.5;
-    const y = e.clientY / innerHeight - 0.5;
-    for (const l of layers) {
-      const d = +l.dataset.depth;
-      l.style.transform = `translate3d(${-x * d}px, ${-y * d}px, 0) rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`;
-    }
-  });
-}
-
 // Estimation
 const form = $("#estimator");
 const range = $("#pages");
@@ -123,12 +105,12 @@ $("#contactForm").addEventListener("submit", (e) => {
   const f = e.target;
   const status = $("#formStatus");
   if (!CONTACT.email) {
-    status.textContent = "Le formulaire arrive très bientôt. Merci de votre patience !";
+    status.textContent = "Le formulaire arrive très bientôt, merci de ta patience !";
     return;
   }
   const body = `Nom : ${f.nom.value}\nPour me joindre : ${f.joindre.value}\n\n${f.message.value}`;
   location.href = `mailto:${CONTACT.email}?subject=${encodeURIComponent("Demande de devis · " + f.nom.value)}&body=${encodeURIComponent(body)}`;
-  status.textContent = "Votre messagerie s'ouvre avec la demande prête à envoyer.";
+  status.textContent = "Ta messagerie s'ouvre avec la demande prête à envoyer.";
 });
 
 // Mentions légales
@@ -137,160 +119,6 @@ $("#openLegal").addEventListener("click", () => legal.showModal());
 legal.addEventListener("click", (e) => e.target === legal && legal.close());
 
 // ---------- Effets avancés ----------
-
-const finePointer = matchMedia("(pointer: fine)").matches;
-
-// Particules de l'accueil : elles forment des mots et fuient la souris
-(() => {
-  const canvas = $("#particles");
-  const ctx = canvas.getContext("2d");
-  const WORDS = ["eyu", "</>", "web", "app"];
-  const STOPS = [[198, 255, 74], [124, 246, 200], [139, 123, 255]];
-  const mouse = { x: -9999, y: -9999 };
-  let W, H, gap, shapes = [], parts = [], word = 0, visible = true, cycle;
-
-  const mix = (t) => {
-    const s = t < 0.5 ? 0 : 1;
-    const k = t < 0.5 ? t * 2 : (t - 0.5) * 2;
-    const [a, b] = [STOPS[s], STOPS[s + 1]];
-    return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(",")})`;
-  };
-
-  function sample(text) {
-    const off = document.createElement("canvas");
-    off.width = W;
-    off.height = H;
-    const o = off.getContext("2d");
-    let size = H * 0.6;
-    const font = () => (o.font = `700 ${size}px "Space Grotesk", sans-serif`);
-    font();
-    while (o.measureText(text).width > W * 0.9) { size *= 0.94; font(); }
-    o.textAlign = "center";
-    o.textBaseline = "middle";
-    o.fillText(text, W / 2, H * 0.47);
-    const data = o.getImageData(0, 0, W, H).data;
-    const pts = [];
-    for (let y = 0; y < H; y += gap)
-      for (let x = 0; x < W; x += gap) if (data[(y * W + x) * 4 + 3] > 140) pts.push([x, y]);
-    for (let i = pts.length - 1; i > 0; i--) {
-      const j = (Math.random() * (i + 1)) | 0;
-      [pts[i], pts[j]] = [pts[j], pts[i]];
-    }
-    return pts;
-  }
-
-  function target(i) {
-    const pts = shapes[word];
-    const p = parts[i];
-    if (i < pts.length) {
-      [p.tx, p.ty] = pts[i];
-      p.dust = false;
-    } else {
-      p.tx = Math.random() * W;
-      p.ty = Math.random() * H;
-      p.dust = true;
-    }
-    p.c = mix(p.tx / W);
-  }
-
-  function setup() {
-    const r = canvas.getBoundingClientRect();
-    W = Math.max(1, Math.round(r.width));
-    H = Math.max(1, Math.round(r.height));
-    const dpr = Math.min(devicePixelRatio || 1, 2);
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    gap = W < 500 ? 5 : 6;
-    shapes = WORDS.map(sample);
-    const n = Math.max(...shapes.map((s) => s.length)) + 60;
-    parts = Array.from({ length: n }, (_, i) => parts[i] || { x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0 });
-    parts.forEach((_, i) => target(i));
-    if (reduced) {
-      parts.forEach((p) => ((p.x = p.tx), (p.y = p.ty)));
-      draw();
-    }
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    const s = gap * 0.55;
-    for (const p of parts) {
-      ctx.globalAlpha = p.dust ? 0.25 : 1;
-      ctx.fillStyle = p.c;
-      ctx.fillRect(p.x, p.y, s, s);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function step() {
-    if (!visible) return;
-    const R = 80;
-    for (const p of parts) {
-      if (p.dust) {
-        p.tx += Math.sin((p.ty + performance.now() / 30) / 50) * 0.3;
-        p.ty -= 0.15;
-        if (p.ty < 0) p.ty = H;
-      }
-      p.vx += (p.tx - p.x) * 0.02;
-      p.vy += (p.ty - p.y) * 0.02;
-      const dx = p.x - mouse.x;
-      const dy = p.y - mouse.y;
-      const d = Math.hypot(dx, dy);
-      if (d < R && d > 0) {
-        const f = ((R - d) / R) * 5;
-        p.vx += (dx / d) * f;
-        p.vy += (dy / d) * f;
-      }
-      p.vx *= 0.86;
-      p.vy *= 0.86;
-      p.x += p.vx;
-      p.y += p.vy;
-    }
-    draw();
-    requestAnimationFrame(step);
-  }
-
-  function next() {
-    word = (word + 1) % WORDS.length;
-    parts.forEach((_, i) => target(i));
-  }
-
-  canvas.addEventListener("pointermove", (e) => {
-    const r = canvas.getBoundingClientRect();
-    mouse.x = e.clientX - r.left;
-    mouse.y = e.clientY - r.top;
-  });
-  canvas.addEventListener("pointerleave", () => (mouse.x = mouse.y = -9999));
-  canvas.addEventListener("click", () => {
-    for (const p of parts) {
-      const a = Math.random() * Math.PI * 2;
-      const v = 10 + Math.random() * 22;
-      p.vx += Math.cos(a) * v;
-      p.vy += Math.sin(a) * v;
-    }
-    clearInterval(cycle);
-    setTimeout(() => { next(); cycle = setInterval(next, 3800); }, 700);
-  });
-
-  let resizeTimer;
-  addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(setup, 200);
-  });
-
-  document.fonts.ready.then(() => {
-    setup();
-    if (reduced) return;
-    new IntersectionObserver(([e]) => {
-      const was = visible;
-      visible = e.isIntersecting;
-      if (visible && !was) requestAnimationFrame(step);
-    }).observe(canvas);
-    requestAnimationFrame(step);
-    cycle = setInterval(next, 3800);
-  });
-})();
 
 // Configurateur de site en direct
 (() => {
@@ -415,45 +243,6 @@ addEventListener("scroll", () => {
   bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
 }, { passive: true });
 
-// Effets à la souris : lumière sur les cartes, boutons aimantés, curseur
-if (finePointer && !reduced) {
-  $$(".offer, .p-browser, .why-grid > div, .gauge, .work, .faq details").forEach((el) => {
-    el.classList.add("spot");
-    el.addEventListener("pointermove", (e) => {
-      const r = el.getBoundingClientRect();
-      el.style.setProperty("--x", `${e.clientX - r.left}px`);
-      el.style.setProperty("--y", `${e.clientY - r.top}px`);
-    });
-  });
-
-  $$(".btn").forEach((b) => {
-    b.addEventListener("pointermove", (e) => {
-      const r = b.getBoundingClientRect();
-      const x = (e.clientX - r.left - r.width / 2) * 0.25;
-      const y = (e.clientY - r.top - r.height / 2) * 0.35;
-      b.style.transform = `translate(${x}px, ${y}px)`;
-    });
-    b.addEventListener("pointerleave", () => (b.style.transform = ""));
-  });
-
-  const cursor = $(".cursor");
-  let cx = 0, cy = 0, tx = 0, ty = 0;
-  addEventListener("pointermove", (e) => {
-    tx = e.clientX;
-    ty = e.clientY;
-    cursor.classList.add("on");
-    cursor.classList.toggle("big", !!e.target.closest("a, button, label, summary, .ba"));
-  });
-  document.addEventListener("pointerleave", () => cursor.classList.remove("on"));
-  const loop = () => {
-    cx += (tx - cx) * 0.2;
-    cy += (ty - cy) * 0.2;
-    cursor.style.transform = `translate(${cx}px, ${cy}px)`;
-    requestAnimationFrame(loop);
-  };
-  loop();
-}
-
 // Avant / après : glisser à la main
 const ba = $("#ba");
 const baRange = $(".ba-range", ba);
@@ -514,7 +303,7 @@ $$("[data-count]").forEach((c) => (c.textContent = c.dataset.count));
           frag.append(w);
         }
         n.replaceWith(frag);
-      } else if (n.nodeType === 1 && n.tagName !== "BR") {
+      } else if (n.nodeType === 1 && n.tagName !== "BR" && !n.classList.contains("rot")) {
         if (n.classList.contains("grad")) n.classList.add("is-split");
         split(n);
       }
@@ -551,18 +340,39 @@ $$("[data-count]").forEach((c) => (c.textContent = c.dataset.count));
     },
   });
 
-  // Accueil : entrée, puis sortie au défilement
-  const heroWords = split($(".hero h1"));
-  gsap.timeline({ defaults: { ease: "expo.out", duration: 1.3 } })
-    .from(".nav", { yPercent: -110, duration: 1 }, 0)
-    .from(heroWords, { yPercent: 115, rotate: 5, stagger: 0.07 }, 0.1)
-    .from(".hero .eyebrow", { y: 20, opacity: 0, duration: 0.9 }, 0.15)
-    .from(".hero .lead, .hero-cta, .hero-facts", { y: 34, opacity: 0, stagger: 0.1 }, 0.5)
-    .from("#particles", { opacity: 0, scale: 0.85, duration: 1.8 }, 0.2);
+  // Typo cinétique, un peu plus vive que la normale.
+  gsap.globalTimeline.timeScale(1.2);
+  const kinetic = { scale: 2.6, opacity: 0, filter: "blur(10px)", transformOrigin: "50% 60%" };
 
+  // Accueil : les mots arrivent en grand et se posent, les formes roulent en place.
+  const rot = $(".hero .rot");
+  const heroWords = [...split($(".hero h1")), rot];
+  gsap.timeline({ defaults: { ease: "expo.out", duration: 1.2 } })
+    .from(".nav", { yPercent: -110, duration: 1 }, 0)
+    .from(heroWords, { ...kinetic, stagger: 0.16 }, 0.1)
+    .from(".hero .eyebrow", { y: 20, opacity: 0, duration: 0.9 }, 0.15)
+    .from(".hero .lead, .hero-cta, .hero-facts", { x: 60, opacity: 0, stagger: 0.08 }, 0.9)
+    .from(".hero-visual .shape", { scale: 0, rotate: -60, stagger: 0.12, duration: 1.4, ease: "back.out(1.5)" }, 0.5);
+
+  // Le mot souligné du titre change en boucle.
+  const words = rot.dataset.words.split("|");
+  let wi = 0;
+  setInterval(() => {
+    if (document.hidden || window.scrollY > innerHeight) return;
+    wi = (wi + 1) % words.length;
+    gsap.timeline()
+      .to(rot, { yPercent: -60, opacity: 0, filter: "blur(6px)", duration: 0.25, ease: "power2.in" })
+      .add(() => (rot.textContent = words[wi]))
+      .fromTo(rot, { yPercent: 60, opacity: 0, filter: "blur(6px)" }, { yPercent: 0, opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "expo.out" });
+  }, 2200);
+
+  // Sortie au défilement : le texte s'en va, chaque forme part à sa vitesse.
   gsap.timeline({ scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } })
     .to(".hero-text", { yPercent: -30, opacity: 0, ease: "none" }, 0)
-    .to(".hero-visual", { yPercent: 25, scale: 1.2, opacity: 0, ease: "none" }, 0);
+    .to(".shape.s-round", { yPercent: 60, rotate: 40, ease: "none" }, 0)
+    .to(".shape.s-square", { yPercent: -80, rotate: -120, ease: "none" }, 0)
+    .to(".shape.s-half", { yPercent: 120, rotate: 30, ease: "none" }, 0)
+    .to(".shape.s-dot", { yPercent: -200, ease: "none" }, 0);
 
   // Bandeau : vitesse et sens qui suivent le défilement
   const track = $(".marquee-track");
@@ -580,16 +390,16 @@ $$("[data-count]").forEach((c) => (c.textContent = c.dataset.count));
     setSkew(gsap.utils.clamp(-10, 10, -v * 0.35));
   });
 
-  // Gros titres : les mots montent un par un
+  // Gros titres : les mots arrivent en grand et se posent, puis le titre grossit au passage.
   $$(".section h2, .process h2").forEach((h) => {
     gsap.from(split(h), {
-      yPercent: 115,
-      rotate: 4,
-      stagger: 0.05,
-      duration: 1.1,
+      ...kinetic,
+      stagger: 0.09,
+      duration: 1,
       ease: "expo.out",
       scrollTrigger: { trigger: h, start: "top 88%", toggleActions: "play none none reverse" },
     });
+    if (!h.closest(".process")) gsap.fromTo(h, { scale: 0.94, transformOrigin: "0% 50%" }, { scale: 1, ease: "none", scrollTrigger: { trigger: h, start: "top bottom", end: "top 30%", scrub: true } });
   });
 
   // Apparitions génériques, réversibles
